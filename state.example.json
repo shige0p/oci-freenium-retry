@@ -1,0 +1,9 @@
+{
+  "success": false,
+  "instance_ocid": null,
+  "public_ip": null,
+  "created_at": null,
+  "last_attempt_at": null,
+  "last_error": null,
+  "attempt_count": 0
+}

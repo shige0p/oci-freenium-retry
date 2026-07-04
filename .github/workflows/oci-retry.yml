@@ -1,0 +1,69 @@
+name: OCI Always Free Auto-Retry
+
+on:
+  schedule:
+    # 5分毎に実行 (UTC)
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write  # state.json を commit/push するため必要
+
+concurrency:
+  group: oci-retry
+  cancel-in-progress: false
+
+jobs:
+  launch:
+    runs-on: ubuntu-latest
+    timeout-minutes: 4  # cron 5分に対する安全マージン
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r scripts/requirements.txt
+
+      - name: Run launch.py
+        env:
+          OCI_TENANCY_OCID: ${{ secrets.OCI_TENANCY_OCID }}
+          OCI_USER_OCID: ${{ secrets.OCI_USER_OCID }}
+          OCI_COMPARTMENT_OCID: ${{ secrets.OCI_COMPARTMENT_OCID }}
+          OCI_REGION: ${{ secrets.OCI_REGION }}
+          OCI_VCN_OCID: ${{ secrets.OCI_VCN_OCID }}
+          OCI_SUBNET_OCID: ${{ secrets.OCI_SUBNET_OCID }}
+          OCI_API_KEY_CONTENT: ${{ secrets.OCI_API_KEY_CONTENT }}
+          OCI_API_KEY_FINGERPRINT: ${{ secrets.OCI_API_KEY_FINGERPRINT }}
+          OCI_SSH_PUBLIC_KEY: ${{ secrets.OCI_SSH_PUBLIC_KEY }}
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          OCI_SHAPE: ${{ vars.OCI_SHAPE }}
+          OCI_OCPUS: ${{ vars.OCI_OCPUS }}
+          OCI_MEMORY_GB: ${{ vars.OCI_MEMORY_GB }}
+          OCI_DISPLAY_NAME: ${{ vars.OCI_DISPLAY_NAME }}
+          OCI_OS: ${{ vars.OCI_OS }}
+          OCI_OS_VERSION: ${{ vars.OCI_OS_VERSION }}
+          OCI_ARCH: ${{ vars.OCI_ARCH }}
+          OCI_BOOT_VOLUME_SIZE_GB: ${{ vars.OCI_BOOT_VOLUME_SIZE_GB }}
+        run: python scripts/launch.py
+
+      - name: Commit state.json (if changed)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -f state.json
+          if git diff --cached --quiet; then
+            echo "state.json に変更はないため commit をスキップします。"
+          else
+            git commit -m "chore(state): update state.json [skip ci]"
+            git push
+          fi

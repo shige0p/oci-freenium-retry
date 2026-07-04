@@ -1,0 +1,7 @@
+state.json
+__pycache__/
+*.pyc
+.venv/
+.env
+*.pem
+_TASK.md
