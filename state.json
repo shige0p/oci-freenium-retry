@@ -3,7 +3,7 @@
   "instance_ocid": null,
   "public_ip": null,
   "created_at": null,
-  "last_attempt_at": "2026-08-02T12:15:53.434290+00:00",
+  "last_attempt_at": "2026-08-02T12:20:48.121674+00:00",
   "last_error": "InternalError: Out of host capacity.",
-  "attempt_count": 7869
+  "attempt_count": 7870
 }
